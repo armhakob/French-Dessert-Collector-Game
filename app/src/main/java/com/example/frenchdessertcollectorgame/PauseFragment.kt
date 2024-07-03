@@ -22,6 +22,7 @@ class PauseFragment:Fragment(R.layout.pause_page) {
         val continueButton = view.findViewById<ImageButton>(R.id.start)
         val restartButton = view.findViewById<ImageButton>(R.id.restart)
         val quitButton = view.findViewById<ImageButton>(R.id.quit)
+        quitButton.tag
 
         continueButton.setOnClickListener{
             setCurrentFragment(GameFragment())
