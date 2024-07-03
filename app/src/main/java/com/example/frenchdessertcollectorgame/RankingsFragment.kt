@@ -7,22 +7,22 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
 
-class GameOverFragment:Fragment(R.layout.game_over_page) {
+class RankingsFragment:Fragment(R.layout.rankings_page) {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.game_over_page, container, false)
+        return inflater.inflate(R.layout.rankings_page, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val nextButton = view.findViewById<Button>(R.id.nextButton)
+        val retryButton = view.findViewById<Button>(R.id.retryButton)
 
-        nextButton.setOnClickListener{
+        retryButton.setOnClickListener{
             parentFragmentManager.beginTransaction()
-                .replace(R.id.flFragment, RankingsFragment())
+                .replace(R.id.flFragment, HomeFragment())
                 .addToBackStack(null)
                 .commit()
         }
