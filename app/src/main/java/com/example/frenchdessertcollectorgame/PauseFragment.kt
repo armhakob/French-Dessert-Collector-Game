@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import androidx.fragment.app.Fragment
 
 class PauseFragment:Fragment(R.layout.pause_page) {
@@ -18,9 +19,9 @@ class PauseFragment:Fragment(R.layout.pause_page) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val continueButton = view.findViewById<Button>(R.id.start)
-        val restartButton = view.findViewById<Button>(R.id.restart)
-        val quitButton = view.findViewById<Button>(R.id.quit)
+        val continueButton = view.findViewById<ImageButton>(R.id.start)
+        val restartButton = view.findViewById<ImageButton>(R.id.restart)
+        val quitButton = view.findViewById<ImageButton>(R.id.quit)
 
         continueButton.setOnClickListener{
             setCurrentFragment(GameFragment())

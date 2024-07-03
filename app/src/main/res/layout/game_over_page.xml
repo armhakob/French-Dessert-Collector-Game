@@ -28,5 +28,5 @@
         app:layout_constraintHorizontal_bias="0.154"
         app:layout_constraintStart_toStartOf="parent"
         android:text="Next→"
-        android:background="@drawable/button_background"/>
+        android:backgroundTint="@color/black"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
