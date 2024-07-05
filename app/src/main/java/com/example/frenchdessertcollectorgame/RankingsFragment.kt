@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 
 class RankingsFragment:Fragment(R.layout.rankings_page) {
@@ -18,6 +19,10 @@ class RankingsFragment:Fragment(R.layout.rankings_page) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val unitsTextView = view.findViewById<TextView>(R.id.units)
+        val units = arguments?.getInt("unitsPassed") ?: -1
+        unitsTextView.text = units.toString()
+
         val retryButton = view.findViewById<Button>(R.id.retryButton)
 
         retryButton.setOnClickListener{
@@ -25,6 +30,18 @@ class RankingsFragment:Fragment(R.layout.rankings_page) {
                 .replace(R.id.flFragment, HomeFragment())
                 .addToBackStack(null)
                 .commit()
+        }
+
+    }
+
+    companion object {
+        fun newInstance(unitsPassed: Int): RankingsFragment {
+            val fragment = RankingsFragment()
+            val args = Bundle().apply {
+                putInt("unitsPassed", unitsPassed)
+            }
+            fragment.arguments = args
+            return fragment
         }
     }
 }

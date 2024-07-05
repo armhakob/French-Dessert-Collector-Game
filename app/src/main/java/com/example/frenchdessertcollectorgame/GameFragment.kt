@@ -1,5 +1,6 @@
 package com.example.frenchdessertcollectorgame
 
+import android.graphics.Rect
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.view.LayoutInflater
@@ -9,7 +10,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 
-class GameFragment:Fragment(R.layout.game_page) {
+class GameFragment:Fragment(R.layout.game_page), GameView.GameListener{
 
     private var countDownTimer: CountDownTimer? = null
     private lateinit var timerTextView: TextView
@@ -37,10 +38,24 @@ class GameFragment:Fragment(R.layout.game_page) {
                 .commit()
             stopCountdown()
         }
+
+
+        //Rectangles
+
+        val gameView: GameView = view.findViewById(R.id.gameView)
+        gameView.setGameListener(this)
+        gameView.invalidate()
+    }
+    override fun onAllRectanglesDeleted(unitsPassed: Int) {
+        val fragment = RankingsFragment.newInstance(unitsPassed)
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.flFragment, fragment)
+            .addToBackStack(null)
+            .commit()
     }
 
     private fun startCountdown(seconds: Int) {
-        countDownTimer?.cancel() // Cancel any existing timer
+        countDownTimer?.cancel()
         countDownTimer = object : CountDownTimer(seconds * 1000L, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 val minutes = millisUntilFinished / 1000 / 60
@@ -58,6 +73,6 @@ class GameFragment:Fragment(R.layout.game_page) {
 
     fun stopCountdown() {
         countDownTimer?.cancel()
-        timerTextView.text = "Stopped" // You can set this to any message you want
+        timerTextView.text = "Stopped"
     }
 }
