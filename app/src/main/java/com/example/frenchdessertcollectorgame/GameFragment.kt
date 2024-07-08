@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 
@@ -14,7 +15,7 @@ class GameFragment:Fragment(R.layout.game_page), GameView.GameListener{
 
     private var countDownTimer: CountDownTimer? = null
     private lateinit var timerTextView: TextView
-    private lateinit var pauseButton: Button
+    private lateinit var pauseButton: ImageButton
 
 
     override fun onCreateView(
@@ -46,14 +47,6 @@ class GameFragment:Fragment(R.layout.game_page), GameView.GameListener{
         gameView.setGameListener(this)
         gameView.invalidate()
     }
-    override fun onAllRectanglesDeleted(unitsPassed: Int) {
-        val fragment = RankingsFragment.newInstance(unitsPassed)
-        parentFragmentManager.beginTransaction()
-            .replace(R.id.flFragment, fragment)
-            .addToBackStack(null)
-            .commit()
-    }
-
     private fun startCountdown(seconds: Int) {
         countDownTimer?.cancel()
         countDownTimer = object : CountDownTimer(seconds * 1000L, 1000) {
@@ -74,5 +67,13 @@ class GameFragment:Fragment(R.layout.game_page), GameView.GameListener{
     fun stopCountdown() {
         countDownTimer?.cancel()
         timerTextView.text = "Stopped"
+    }
+
+    override fun onAllBitmapsDeleted(unitsPassed: Int) {
+        val fragment = RankingsFragment.newInstance(unitsPassed)
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.flFragment, fragment)
+            .addToBackStack(null)
+            .commit()
     }
 }

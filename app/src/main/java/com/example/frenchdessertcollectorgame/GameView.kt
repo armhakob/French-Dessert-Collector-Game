@@ -2,6 +2,8 @@ package com.example.frenchdessertcollectorgame
 
 import android.animation.ValueAnimator
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -12,21 +14,45 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.animation.LinearInterpolator
 import kotlin.random.Random
+import android.os.Handler
+import android.os.Looper
 
-
-class GameView @JvmOverloads constructor(context: Context, attributeSet: AttributeSet? = null, deffStyleAttr: Int = 0):View(context, attributeSet, deffStyleAttr) {
+class GameView @JvmOverloads constructor(context: Context, attributeSet: AttributeSet? = null, defStyleAttr: Int = 0) : View(context, attributeSet, defStyleAttr) {
     private var unitsPassed = 0
 
-    private val animatedRects = mutableListOf<AnimatedRect>()
+    private val animatedBitmaps = mutableListOf<AnimatedBitmap>()
     private val paint = Paint()
     var h = 0f
 
+    private val desiredWidth = 250
+    private val desiredHeight = 250
 
-    private var blackRect: Rect = Rect(0, 0, 100, 100)
-    private var blackRectDragging = false
-    private var lastTouchY = 0f
+    private val movableBitmap: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.player).let {
+        Bitmap.createScaledBitmap(it, desiredWidth, desiredHeight, false)
+    }
+    private var movableBitmapX = 0f
+    private var movableBitmapY = 0f
+    private var movableBitmapDragging = false
     private var lastTouchX = 0f
+    private var lastTouchY = 0f
     private var gameListener: GameListener? = null
+
+    private val images: List<Bitmap> = listOf(
+        BitmapFactory.decodeResource(resources, R.drawable.macaron),
+        BitmapFactory.decodeResource(resources, R.drawable.puff),
+        BitmapFactory.decodeResource(resources, R.drawable.baguette),
+        BitmapFactory.decodeResource(resources, R.drawable.bone),
+        BitmapFactory.decodeResource(resources, R.drawable.fishbone)
+    )
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val addBitmapRunnable = object : Runnable {
+        override fun run() {
+            addNewAnimatedBitmap()
+            val randomDelay = Random.nextLong(500, 1000)
+            handler.postDelayed(this, randomDelay)
+        }
+    }
 
     fun setGameListener(listener: GameListener) {
         gameListener = listener
@@ -36,127 +62,106 @@ class GameView @JvmOverloads constructor(context: Context, attributeSet: Attribu
         super.onDraw(canvas)
         canvas.drawColor(Color.YELLOW)
 
-        val iterator = animatedRects.iterator()
+        val iterator = animatedBitmaps.iterator()
         while (iterator.hasNext()) {
-            val animatedRect = iterator.next()
-            paint.color = animatedRect.color
-            canvas.drawRect(animatedRect.rect, paint)
+            val animatedBitmap = iterator.next()
+            canvas.drawBitmap(animatedBitmap.bitmap, null, animatedBitmap.rect, paint)
 
-            if (animatedRect.rect.bottom >= height) {
+            if (animatedBitmap.rect.bottom >= height) {
                 iterator.remove()
-            } else if (animatedRect.rect.intersect(blackRect)) {
+            } else if (animatedBitmap.rect.intersect(Rect(movableBitmapX.toInt(), movableBitmapY.toInt(), (movableBitmapX + movableBitmap.width).toInt(), (movableBitmapY + movableBitmap.height).toInt()))) {
                 iterator.remove()
                 unitsPassed++
                 Log.d("GameView", "Units passed: $unitsPassed")
             }
         }
 
-        paint.color = Color.BLACK
-        canvas.drawRect(blackRect, paint)
+        canvas.drawBitmap(movableBitmap, movableBitmapX, movableBitmapY, paint)
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
-        Log.d("B:", bottom.toString())
-        Log.d("B:", top.toString())
         h = (bottom - top).toFloat()
         val canvasWidth = right - left
         val canvasHeight = bottom - top
 
         val centerX = (right - left) / 2
-        blackRect.offsetTo(centerX - blackRect.width() / 2, (h - blackRect.height()).toInt())
+        movableBitmapX = (centerX - movableBitmap.width / 2).toFloat()
+        movableBitmapY = (h - movableBitmap.height).toFloat()
 
-        initializeRectangles(canvasWidth, canvasHeight)
+        initializeBitmaps(canvasWidth, canvasHeight)
     }
 
-    private fun initializeRectangles(canvasWidth: Int, canvasHeight: Int) {
-        animatedRects.clear()
-
-        val numRects = 10
-        for (i in 0 until numRects) {
-            val rectSize = 100
-            val startX = Random.nextInt(0, canvasWidth - rectSize)
-            val rect = Rect(startX, 0, startX + rectSize, rectSize)
-            val color = getRandomColor()
-            val animatedRect = AnimatedRect(rect, color)
-            animatedRects.add(animatedRect)
-
-            val startDelay = (i * 500).toLong()
-            startRectangleAnimation(animatedRect, canvasHeight, startDelay)
-        }
+    private fun initializeBitmaps(canvasWidth: Int, canvasHeight: Int) {
+        animatedBitmaps.clear()
+        handler.post(addBitmapRunnable)
     }
 
-    private fun startRectangleAnimation(animatedRect: AnimatedRect, canvasHeight: Int, startDelay: Long) {
+    private fun addNewAnimatedBitmap() {
+        val canvasWidth = width
+        val canvasHeight = height
+
+        val startX = Random.nextInt(0, canvasWidth - 100)
+        val rect = Rect(startX, 0, startX + 100, 100)
+        val bitmap = images.random()
+        val animatedBitmap = AnimatedBitmap(bitmap, rect)
+        animatedBitmaps.add(animatedBitmap)
+
+        startBitmapAnimation(animatedBitmap, canvasHeight)
+    }
+
+    private fun startBitmapAnimation(animatedBitmap: AnimatedBitmap, canvasHeight: Int) {
         val animator = ValueAnimator.ofFloat(0f, canvasHeight.toFloat())
         animator.duration = 3000
         animator.interpolator = LinearInterpolator()
-        animator.startDelay = startDelay
         animator.addUpdateListener { animation ->
             val animatedValue = animation.animatedValue as Float
-            animatedRect.updatePosition(animatedValue)
+            animatedBitmap.updatePosition(animatedValue)
             invalidate()
         }
         animator.start()
     }
 
-//    private fun updateRectanglesPosition(animatedValue: Float) {
-//        for (rect in rectangles) {
-//            val height = rect.height()
-//            rect.offsetTo(rect.left, (animatedValue - height).toInt())
-//        }
-//    }
-
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                if (blackRect.contains(event.x.toInt(), event.y.toInt())) {
-                    blackRectDragging = true
-                    lastTouchY = event.y
+                if (event.x >= movableBitmapX && event.x <= movableBitmapX + movableBitmap.width && event.y >= movableBitmapY && event.y <= movableBitmapY + movableBitmap.height) {
+                    movableBitmapDragging = true
                     lastTouchX = event.x
+                    lastTouchY = event.y
                     return true
                 }
             }
             MotionEvent.ACTION_MOVE -> {
-                if (blackRectDragging) {
-                    val dy = event.y - lastTouchY
+                if (movableBitmapDragging) {
                     val dx = event.x - lastTouchX
-                    moveBlackRect(dx, dy)
-                    lastTouchY = event.y
+                    moveMovableBitmap(dx)
                     lastTouchX = event.x
                     invalidate()
                     return true
                 }
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                blackRectDragging = false
+                movableBitmapDragging = false
                 return true
             }
         }
         return super.onTouchEvent(event)
     }
 
-    private fun moveBlackRect(dx: Float, dy: Float) {
-        val newLeft = blackRect.left + dx.toInt()
-        val newTop = blackRect.top + dy.toInt()
-        val newRight = blackRect.right + dx.toInt()
-        val newBottom = blackRect.bottom + dy.toInt()
+    private fun moveMovableBitmap(dx: Float) {
+        val newLeft = movableBitmapX + dx
+        val newRight = newLeft + movableBitmap.width
 
-        if (newLeft >= 0 && newRight <= width && newTop >= 0 && newBottom <= height) {
-            blackRect.offset(dx.toInt(), dy.toInt())
+        if (newLeft >= 0 && newRight <= width) {
+            movableBitmapX = newLeft
         } else {
-            if (newLeft < 0) blackRect.offsetTo(0, blackRect.top)
-            if (newRight > width) blackRect.offsetTo(width - blackRect.width(), blackRect.top)
-            if (newTop < 0) blackRect.offsetTo(blackRect.left, 0)
-            if (newBottom > height) blackRect.offsetTo(blackRect.left, height - blackRect.height())
+            if (newLeft < 0) movableBitmapX = 0f
+            if (newRight > width) movableBitmapX = (width - movableBitmap.width).toFloat()
         }
     }
 
-    private fun getRandomColor(): Int {
-        val rnd = Random
-        return Color.rgb(rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256))
-    }
-
-    private class AnimatedRect(var rect: Rect, val color: Int) {
+    private class AnimatedBitmap(val bitmap: Bitmap, var rect: Rect) {
         fun updatePosition(y: Float) {
             val height = rect.height()
             rect.offsetTo(rect.left, y.toInt() - height)
@@ -164,6 +169,6 @@ class GameView @JvmOverloads constructor(context: Context, attributeSet: Attribu
     }
 
     interface GameListener {
-        fun onAllRectanglesDeleted(unitsPassed: Int)
+        fun onAllBitmapsDeleted(unitsPassed: Int)
     }
 }

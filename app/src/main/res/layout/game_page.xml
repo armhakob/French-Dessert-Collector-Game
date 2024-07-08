@@ -46,14 +46,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
+    <ImageButton
         android:id="@+id/pauseButton"
         android:layout_width="78dp"
         android:layout_height="81dp"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="16dp"
-        android:background="#00000000"
-        android:text="⏸"
+        android:background="@drawable/stop"
         android:textSize="27dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
