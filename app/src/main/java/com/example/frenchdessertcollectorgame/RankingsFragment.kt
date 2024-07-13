@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 class RankingsFragment:Fragment(R.layout.rankings_page) {
     override fun onCreateView(
@@ -19,11 +21,10 @@ class RankingsFragment:Fragment(R.layout.rankings_page) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val unitsTextView = view.findViewById<TextView>(R.id.units)
-        val units = arguments?.getInt("unitsPassed") ?: -1
-        unitsTextView.text = units.toString()
-
         val retryButton = view.findViewById<Button>(R.id.retryButton)
+
+        val recyclerView: RecyclerView = view.findViewById(R.id.rankingList)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         retryButton.setOnClickListener{
             parentFragmentManager.beginTransaction()
@@ -34,14 +35,4 @@ class RankingsFragment:Fragment(R.layout.rankings_page) {
 
     }
 
-    companion object {
-        fun newInstance(unitsPassed: Int): RankingsFragment {
-            val fragment = RankingsFragment()
-            val args = Bundle().apply {
-                putInt("unitsPassed", unitsPassed)
-            }
-            fragment.arguments = args
-            return fragment
-        }
-    }
 }

@@ -18,7 +18,20 @@ import android.os.Handler
 import android.os.Looper
 
 class GameView @JvmOverloads constructor(context: Context, attributeSet: AttributeSet? = null, defStyleAttr: Int = 0) : View(context, attributeSet, defStyleAttr) {
+    private var localCalback: (Int) -> Unit = {}
     private var unitsPassed = 0
+
+    private var countM = 0
+    private var countB = 0
+    private var countP = 0
+    private var countBone = 0
+    private var countFBone = 0
+
+    private val pointB = 10
+    private val pointM = 20
+    private val pointP = 30
+    private val pointBone = -10
+    private val pointFBone = -20
 
     private val animatedBitmaps = mutableListOf<AnimatedBitmap>()
     private val paint = Paint()
@@ -26,6 +39,10 @@ class GameView @JvmOverloads constructor(context: Context, attributeSet: Attribu
 
     private val desiredWidth = 250
     private val desiredHeight = 250
+
+    fun setTimerAdderListener(callback: (Int) -> Unit) {
+        localCalback = callback
+    }
 
     private val movableBitmap: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.player).let {
         Bitmap.createScaledBitmap(it, desiredWidth, desiredHeight, false)
@@ -42,7 +59,7 @@ class GameView @JvmOverloads constructor(context: Context, attributeSet: Attribu
         BitmapFactory.decodeResource(resources, R.drawable.puff),
         BitmapFactory.decodeResource(resources, R.drawable.baguette),
         BitmapFactory.decodeResource(resources, R.drawable.bone),
-        BitmapFactory.decodeResource(resources, R.drawable.fishbone)
+        BitmapFactory.decodeResource(resources, R.drawable.fishbone),
     )
 
     private val handler = Handler(Looper.getMainLooper())
@@ -60,7 +77,6 @@ class GameView @JvmOverloads constructor(context: Context, attributeSet: Attribu
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        canvas.drawColor(Color.YELLOW)
 
         val iterator = animatedBitmaps.iterator()
         while (iterator.hasNext()) {
@@ -72,6 +88,36 @@ class GameView @JvmOverloads constructor(context: Context, attributeSet: Attribu
             } else if (animatedBitmap.rect.intersect(Rect(movableBitmapX.toInt(), movableBitmapY.toInt(), (movableBitmapX + movableBitmap.width).toInt(), (movableBitmapY + movableBitmap.height).toInt()))) {
                 iterator.remove()
                 unitsPassed++
+
+                when (animatedBitmap.bitmap) {
+                    images[0] -> {
+                        countM++
+                        unitsPassed += pointM
+                    }
+                    images[1] -> {
+                        countP++
+                        unitsPassed += pointP
+                    }
+                    images[2] ->{
+                        countB++
+                        unitsPassed += pointB
+                        localCalback(5)
+                    }
+                    images[3] -> {
+                        countBone++
+                        unitsPassed += pointBone
+                    }
+                    images[4] -> {
+                        countFBone++
+                        unitsPassed += pointFBone
+                    }
+                }
+                a.buggeteScore = countB
+                a.puffScore =countP
+                a.macaroneScore = countM
+                a.boneScore = countBone
+                a.fishboneScore = countFBone
+                a.totalScore = unitsPassed
                 Log.d("GameView", "Units passed: $unitsPassed")
             }
         }
@@ -172,3 +218,15 @@ class GameView @JvmOverloads constructor(context: Context, attributeSet: Attribu
         fun onAllBitmapsDeleted(unitsPassed: Int)
     }
 }
+
+object a {
+    var name = ""
+    var buggeteScore = 0
+    var macaroneScore = 0
+    var puffScore = 0
+    var fishboneScore = 0
+    var boneScore = 0
+    var time = ""
+    var totalScore = 0
+}
+

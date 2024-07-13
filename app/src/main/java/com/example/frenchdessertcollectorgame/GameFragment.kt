@@ -3,6 +3,7 @@ package com.example.frenchdessertcollectorgame
 import android.graphics.Rect
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,18 +11,20 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 
 class GameFragment:Fragment(R.layout.game_page), GameView.GameListener{
 
     private var countDownTimer: CountDownTimer? = null
     private lateinit var timerTextView: TextView
     private lateinit var pauseButton: ImageButton
-
+    private var name: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        a.name = "gag"
         return inflater.inflate(R.layout.game_page, container, false)
     }
 
@@ -42,9 +45,16 @@ class GameFragment:Fragment(R.layout.game_page), GameView.GameListener{
 
 
         //Rectangles
-
         val gameView: GameView = view.findViewById(R.id.gameView)
         gameView.setGameListener(this)
+        gameView.setTimerAdderListener {
+//            viewModel.addTimerTime(5)
+            //timerAdd(it) //for heart
+        }
+
+//        viewModel.time.observe {
+//
+//        }
         gameView.invalidate()
     }
     private fun startCountdown(seconds: Int) {
@@ -60,7 +70,6 @@ class GameFragment:Fragment(R.layout.game_page), GameView.GameListener{
                 timerTextView.text = "00:00"
             }
         }
-
         countDownTimer?.start()
     }
 
@@ -70,10 +79,11 @@ class GameFragment:Fragment(R.layout.game_page), GameView.GameListener{
     }
 
     override fun onAllBitmapsDeleted(unitsPassed: Int) {
-        val fragment = RankingsFragment.newInstance(unitsPassed)
         parentFragmentManager.beginTransaction()
-            .replace(R.id.flFragment, fragment)
+            .replace(R.id.flFragment, RankingsFragment())
+
             .addToBackStack(null)
             .commit()
     }
+
 }
