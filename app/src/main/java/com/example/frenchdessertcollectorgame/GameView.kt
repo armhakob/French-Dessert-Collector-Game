@@ -5,9 +5,12 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
@@ -17,7 +20,8 @@ import kotlin.random.Random
 import android.os.Handler
 import android.os.Looper
 
-class GameView @JvmOverloads constructor(context: Context, attributeSet: AttributeSet? = null, defStyleAttr: Int = 0) : View(context, attributeSet, defStyleAttr) {
+class GameView @JvmOverloads constructor(context: Context, attributeSet: AttributeSet? = null, defStyleAttr: Int = 0) : View(context, attributeSet, defStyleAttr), SensorEventListener {
+    private var timerCallback: TimerCallback? = null
     private var localCalback: (Int) -> Unit = {}
     private var unitsPassed = 0
 
@@ -40,8 +44,14 @@ class GameView @JvmOverloads constructor(context: Context, attributeSet: Attribu
     private val desiredWidth = 250
     private val desiredHeight = 250
 
+    private var lastCheckedPuffScore = 0
+
     fun setTimerAdderListener(callback: (Int) -> Unit) {
         localCalback = callback
+    }
+
+    fun setTimerCallback(callback: TimerCallback) {
+        timerCallback = callback
     }
 
     private val movableBitmap: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.player).let {
@@ -61,6 +71,10 @@ class GameView @JvmOverloads constructor(context: Context, attributeSet: Attribu
         BitmapFactory.decodeResource(resources, R.drawable.bone),
         BitmapFactory.decodeResource(resources, R.drawable.fishbone),
     )
+    private val sensorManager: SensorManager =
+        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    private val accelerometer: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+
 
     private val handler = Handler(Looper.getMainLooper())
     private val addBitmapRunnable = object : Runnable {
@@ -85,6 +99,11 @@ class GameView @JvmOverloads constructor(context: Context, attributeSet: Attribu
 
             if (animatedBitmap.rect.bottom >= height) {
                 iterator.remove()
+                when (animatedBitmap.bitmap) {
+                    images[0] -> { a.heartPoint-- }
+                    images[1] -> { a.heartPoint-- }
+                    images[2] -> { a.heartPoint-- }
+                }
             } else if (animatedBitmap.rect.intersect(Rect(movableBitmapX.toInt(), movableBitmapY.toInt(), (movableBitmapX + movableBitmap.width).toInt(), (movableBitmapY + movableBitmap.height).toInt()))) {
                 iterator.remove()
                 unitsPassed++
@@ -119,6 +138,16 @@ class GameView @JvmOverloads constructor(context: Context, attributeSet: Attribu
                 a.fishboneScore = countFBone
                 a.totalScore = unitsPassed
                 Log.d("GameView", "Units passed: $unitsPassed")
+                val minutes = (timerCallback?.getTime()?.div(1000) ?: 0) / 60
+                val seconds = (timerCallback?.getTime()?.div(1000) ?: 0) % 60
+                a.time = String.format("%02d:%02d", minutes, seconds)
+//                a.time = timerCallback?.getTime().toString()
+                Log.d("GameView", "Time ${timerCallback?.getTime()}")
+
+                if (countP >= lastCheckedPuffScore + 30) {
+                    lastCheckedPuffScore += 30
+                    timerCallback?.addTime(30000)
+                }
             }
         }
 
@@ -207,6 +236,28 @@ class GameView @JvmOverloads constructor(context: Context, attributeSet: Attribu
         }
     }
 
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+        // Do nothing
+    }
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        accelerometer?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
+        }
+    }
+    override fun onSensorChanged(event: SensorEvent) {
+        if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
+            val x = event.values[0]
+            Log.d("GameView", "Accelerometer x: $x")
+            moveMovableBitmap(-x * 5)
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        sensorManager.unregisterListener(this)
+    }
+
     private class AnimatedBitmap(val bitmap: Bitmap, var rect: Rect) {
         fun updatePosition(y: Float) {
             val height = rect.height()
@@ -217,16 +268,8 @@ class GameView @JvmOverloads constructor(context: Context, attributeSet: Attribu
     interface GameListener {
         fun onAllBitmapsDeleted(unitsPassed: Int)
     }
+
 }
 
-object a {
-    var name = ""
-    var buggeteScore = 0
-    var macaroneScore = 0
-    var puffScore = 0
-    var fishboneScore = 0
-    var boneScore = 0
-    var time = ""
-    var totalScore = 0
-}
+
 

@@ -8,9 +8,9 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 
 class GameOverFragment:Fragment(R.layout.game_over_page) {
-
     private val pointB = 10
     private val pointM = 20
     private val pointP = 30
@@ -48,9 +48,10 @@ class GameOverFragment:Fragment(R.layout.game_over_page) {
         val fBoneP = view.findViewById<TextView>(R.id.scoreFBone)
         fBoneP.text = (a.fishboneScore * pointFBone).toString()
 
+        val time = view.findViewById<TextView>(R.id.time)
+        time.text = a.time
         val total = view.findViewById<TextView>(R.id.totalScore)
         total.text = a.totalScore.toString()
-
 
         Log.d("GAME OVER FRAGMENT", "name: ${a.name}")
 

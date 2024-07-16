@@ -17,6 +17,6 @@ class ScoreViewModel: ViewModel(){
     }
 
     fun addUserScore(info: Score){
-        scoreList.add(info)
+        scoreList.add(1, info)
     }
 }
